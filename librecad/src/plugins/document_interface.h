@@ -236,6 +236,11 @@ public:
     virtual void addText(QString txt, QString sty, QPointF *start, double height,
                 double angle, DPI::HAlign ha,  DPI::VAlign va) = 0;
 
+
+    virtual void addMText(QString txt, QString sty, QPointF *start, double height,
+                double angle, DPI::HAlign ha,  DPI::VAlign va) = 0;
+
+
     //! Add circle entity to current document.
     /*! Add circle entity to current document with current attributes.
     *  \param start center point coordinate.

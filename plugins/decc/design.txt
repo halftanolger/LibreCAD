@@ -1,0 +1,30 @@
+
+
+The LibreCAD plugin class
++-----------------------+
+| DECC                  |
++-----------------------+
+
+contains / opens a dialog named
+
++-----------------------+
+| DialogDECC            |
++-----------------------+
+
+This dialog has a slot, which take a filename as input, reads the file
+and executed it (interprets it) with the help from Googles V8 JavaScript engine.
+
+This engine has bin extended with some local commands, this is defined in these classes:
+
++-----------------------+  +-----------------------+
+| ScriptDECC            +--+ CAD                   |
++-----------+-----------+  +-----------------------+
+            |
++-----------+-----------+
+| V8Base                |
++-----------------------+
+
+
+
+
+

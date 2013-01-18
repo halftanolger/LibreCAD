@@ -68,7 +68,8 @@ win32 {
 LIBS += -L../../generated/lib  \
     -ldxfrw \
     -ljwwlib \
-    -lmuparser
+    -lmuparser \
+    -lv8
 
 
 DEPENDPATH += \
