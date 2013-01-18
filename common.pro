@@ -20,6 +20,7 @@ win32 {
     COPY = cp
 }
 
+unix:!macx: LIBS += -L/home/halftan/src/V8/v8/out/x64.release/obj.target/tools/gyp/ -lv8
 
 # Boost
 exists($${BOOST_DIR}){
