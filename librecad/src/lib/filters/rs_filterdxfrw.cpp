@@ -426,11 +426,15 @@ void RS_FilterDXFRW::addLWPolyline(const DRW_LWPolyline& data) {
     RS_Polyline *polyline = new RS_Polyline(currentContainer, d);
     setEntityAttributes(polyline, &data);
 
+    QList< QPair<RS_Vector*, double> > verList;
     for (unsigned int i=0; i<data.vertlist.size(); i++) {
         DRW_Vertex2D *vert = data.vertlist.at(i);
-        RS_Vector v(vert->x, vert->y);
-        polyline->addVertex(v, vert->bulge);
+        RS_Vector *v = new RS_Vector(vert->x, vert->y);
+        verList.append(qMakePair(v, vert->bulge));
     }
+    polyline->appendVertexs(verList);
+    while (!verList.isEmpty())
+         delete verList.takeFirst().first;
 
     currentContainer->addEntity(polyline);
 }
@@ -452,11 +456,16 @@ void RS_FilterDXFRW::addPolyline(const DRW_Polyline& data) {
                       data.flags&0x1);
     RS_Polyline *polyline = new RS_Polyline(currentContainer, d);
     setEntityAttributes(polyline, &data);
+
+    QList< QPair<RS_Vector*, double> > verList;
     for (unsigned int i=0; i<data.vertlist.size(); i++) {
         DRW_Vertex *vert = data.vertlist.at(i);
-        RS_Vector v(vert->basePoint.x, vert->basePoint.y);
-        polyline->addVertex(v, vert->bulge);
+        RS_Vector *v = new RS_Vector(vert->basePoint.x, vert->basePoint.y);
+        verList.append(qMakePair(v, vert->bulge));
     }
+    polyline->appendVertexs(verList);
+    while (!verList.isEmpty())
+         delete verList.takeFirst().first;
 
     currentContainer->addEntity(polyline);
 }
@@ -1261,8 +1270,10 @@ void RS_FilterDXFRW::writeBlockRecords(){
     RS_Block *blk;
     for (uint i = 0; i < graphic->countBlocks(); i++) {
         blk = graphic->blockAt(i);
-        RS_DEBUG->print("writing block record: %s", (const char*)blk->getName().toLocal8Bit());
-        dxf->writeBlockRecord(blk->getName().toUtf8().data());
+        if (!blk->isUndone()){
+            RS_DEBUG->print("writing block record: %s", (const char*)blk->getName().toLocal8Bit());
+            dxf->writeBlockRecord(blk->getName().toUtf8().data());
+        }
     }
 }
 
@@ -1320,7 +1331,9 @@ void RS_FilterDXFRW::writeBlocks() {
             RS_EntityContainer *ct = (RS_EntityContainer *)it.key();
             for (RS_Entity* e=ct->firstEntity(RS2::ResolveNone);
                     e!=NULL; e=ct->nextEntity(RS2::ResolveNone)) {
-                writeEntity(e);
+                if ( !(e->getFlag(RS2::FlagUndone)) ) {
+                    writeEntity(e);
+                }
             }
             ++it;
         }
@@ -1328,19 +1341,23 @@ void RS_FilterDXFRW::writeBlocks() {
 
     for (uint i = 0; i < graphic->countBlocks(); i++) {
         blk = graphic->blockAt(i);
-        RS_DEBUG->print("writing block: %s", (const char*)blk->getName().toLocal8Bit());
+        if (!blk->isUndone()) {
+            RS_DEBUG->print("writing block: %s", (const char*)blk->getName().toLocal8Bit());
 
-        DRW_Block block;
-        block.name = blk->getName().toUtf8().data();
-        block.basePoint.x = blk->getBasePoint().x;
-        block.basePoint.y = blk->getBasePoint().y;
+            DRW_Block block;
+            block.name = blk->getName().toUtf8().data();
+            block.basePoint.x = blk->getBasePoint().x;
+            block.basePoint.y = blk->getBasePoint().y;
 #ifndef  RS_VECTOR2D
-        block.basePoint.z = blk->getBasePoint().z;
+            block.basePoint.z = blk->getBasePoint().z;
 #endif
-        dxf->writeBlock(&block);
-        for (RS_Entity* e=blk->firstEntity(RS2::ResolveNone);
-                e!=NULL; e=blk->nextEntity(RS2::ResolveNone)) {
-            writeEntity(e);
+            dxf->writeBlock(&block);
+            for (RS_Entity* e=blk->firstEntity(RS2::ResolveNone);
+                 e!=NULL; e=blk->nextEntity(RS2::ResolveNone)) {
+                if ( !(e->getFlag(RS2::FlagUndone)) ) {
+                    writeEntity(e);
+                }
+            }
         }
     }
 }
@@ -1976,8 +1993,8 @@ void RS_FilterDXFRW::writeSpline(RS_Spline *s) {
         if (s->isClosed()) {
             pol.flags = 1;
         } else {
-            pol.addVertex( DRW_Vertex(e->getEndpoint().x,
-                                      e->getEndpoint().y, 0.0, 0.0));
+            pol.addVertex( DRW_Vertex(s->getEndpoint().x,
+                                      s->getEndpoint().y, 0.0, 0.0));
         }
         getEntityAttributes(&pol, s);
         dxf->writePolyline(&pol);
@@ -2527,7 +2544,7 @@ void RS_FilterDXFRW::writeImage(RS_Image * i) {
     image.contrast = i->getContrast();
     image.fade = i->getFade();
 
-    DRW_ImageDef *imgDef = dxf->writeImage(&image, i->getFile().toStdString());
+    DRW_ImageDef *imgDef = dxf->writeImage(&image, i->getFile().toUtf8().data());
     if (imgDef != NULL) {
         imgDef->loaded = 1;
         imgDef->u = i->getData().size.x;

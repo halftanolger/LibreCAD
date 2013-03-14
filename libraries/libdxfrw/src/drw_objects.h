@@ -57,11 +57,11 @@ protected:
     void parseCode(int code, dxfReader *reader);
 
 public:
-    enum DRW::TTYPE tType;  /*!< enum: entity type, code 0 */
-    string handle;                       /*!< entity identifier, code 5 */
-    string handleBlock;              /*!< Soft-pointer ID/handle to owner BLOCK_RECORD object, code 330 */
+    enum DRW::TTYPE tType;     /*!< enum: entity type, code 0 */
+    int handle;                /*!< entity identifier, code 5 */
+    int handleBlock;           /*!< Soft-pointer ID/handle to owner BLOCK_RECORD object, code 330 */
     UTF8STRING name;           /*!< entry name, code 2 */
-    int flags;                               /*!< Flags relevant to entry, code 70 */
+    int flags;                 /*!< Flags relevant to entry, code 70 */
 };
 
 
@@ -72,7 +72,9 @@ public:
 */
 class DRW_Dimstyle : public DRW_TableEntry {
 public:
-    DRW_Dimstyle() {
+    DRW_Dimstyle() { reset();}
+
+    void reset(){
         tType = DRW::DIMSTYLE;
         dimasz = dimtxt = dimexe = 0.18;
         dimexo = 0.0625;
@@ -178,7 +180,9 @@ public:
 /*TODO: handle complex lineType*/
 class DRW_LType : public DRW_TableEntry {
 public:
-    DRW_LType() {
+    DRW_LType() { reset();}
+
+    void reset(){
         tType = DRW::LTYPE;
         desc = "";
         size = 0;
@@ -240,7 +244,9 @@ public:
 */
 class DRW_Textstyle : public DRW_TableEntry {
 public:
-    DRW_Textstyle() {
+    DRW_Textstyle() { reset();}
+
+    void reset(){
         tType = DRW::STYLE;
         height = oblique = 0.0;
         width = lastHeight = 1.0;
@@ -269,7 +275,9 @@ public:
 */
 class DRW_Vport : public DRW_TableEntry {
 public:
-    DRW_Vport() {
+    DRW_Vport() { reset();}
+
+    void reset(){
         UpperRight.x = UpperRight.y = 1.0;
         snapSpacing.x = snapSpacing.y = 10.0;
         gridSpacing = snapSpacing;
@@ -380,6 +388,7 @@ private:
     string comments;
     string name;
     DRW_Variant *curr;
+    int version; //to use on read
 };
 
 namespace DRW {

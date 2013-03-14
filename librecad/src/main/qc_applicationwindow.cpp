@@ -2988,10 +2988,9 @@ void QC_ApplicationWindow::slotFileSaveAs() {
 void QC_ApplicationWindow::slotFileAutoSave() {
     RS_DEBUG->print("QC_ApplicationWindow::slotFileAutoSave()");
 
-    statusBar()->showMessage(tr("Auto-saving drawing..."));
+    statusBar()->showMessage(tr("Auto-saving drawing..."), 2000);
 
     QC_MDIWindow* w = getMDIWindow();
-    QString name;
     if (w!=NULL) {
         bool cancelled;
         if (w->slotFileSave(cancelled, true)) {
@@ -3007,6 +3006,7 @@ void QC_ApplicationWindow::slotFileAutoSave() {
                                         "Auto-save disabled.")
                                      .arg(w->getDocument()->getAutoSaveFilename()),
                                      QMessageBox::Ok);
+            statusBar()->showMessage(tr("Auto-saving failed"), 2000);
         }
     }
 }
@@ -3290,6 +3290,9 @@ void QC_ApplicationWindow::slotFileClosing() {
     layerWidget->setLayerList(NULL, false);
     blockWidget->setBlockList(NULL);
     coordinateWidget->setGraphic(NULL);
+    QC_MDIWindow* w = getMDIWindow();
+    if(w!=NULL)
+        openedFiles.removeAll(w->getDocument()->getFilename());
 }
 
 
