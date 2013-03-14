@@ -10,11 +10,17 @@
 /*  along with this program.  If not, see <http://www.gnu.org/licenses/>.    */
 /*****************************************************************************/
 
+#include <fstream>
 #include <string>
+#include <sstream>
+#include <iostream>
 #include <QDebug>
 #include <QVariant>
+#include <QStringList>
 #include "cad.h"
 #include "document_interface.h"
+
+using namespace std;
 
 CAD::CAD(Document_Interface *doc):_doc(doc)
 {
@@ -29,23 +35,15 @@ void CAD::addText(QString text, QString style, QPointF *start, double height, do
 {
 
     DPI::HAlign halign = DPI::HAlignLeft;
-    if (ha == 1)
-        halign = DPI::HAlignLeft;
-    else if (ha == 2)
+    if (ha == 2) {
         halign = DPI::HAlignCenter;
-    else if (ha == 3)
+    } else if (ha == 3) {
         halign = DPI::HAlignRight;
+    }
 
-    DPI::VAlign valign = DPI::VAlignBottom;
-    if (va == 1)
-        valign = DPI::VAlignTop;
-    if (va == 2)
-        valign = DPI::VAlignMiddle;
-    if (va == 3)
-        valign = DPI::VAlignBottom;
+    DPI::VAlign valign = DPI::VAlignMiddle;;//static_cast<DPI::VAlign>(va);
 
-    _doc->addMText(text, style,start,height,angle,halign,valign);
-
+    _doc->addText(text, style,start,height,angle,halign,valign);
 }
 
 
@@ -97,6 +95,18 @@ void CAD::updateView()
 void CAD::setLayer(QString name)
 {
     _doc->setLayer(name);
+}
+
+
+void CAD::addInsert(QString name, QPointF ins, QPointF scale, qreal rot)
+{
+
+    QStringList blockList = _doc->getAllBlocks();
+    if (!blockList.contains(name))
+        _doc->addBlockfromFromdisk("/home/halftan/partlibrary/configurator/" + name + ".dxf");
+
+    _doc->addInsert(name,ins,scale,rot);
+
 }
 
 enum DPI::EDATA CAD::QStringToPluginEntityData(QString entityData) {
