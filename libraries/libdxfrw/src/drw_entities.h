@@ -93,6 +93,7 @@ public:
         lWeight = -1; // default BYLAYER (-1)
         space = 0; // default ModelSpace (0)
         haveExtrusion = false;
+        color24 = -1; //default -1 not set
     }
 
     DRW_Entity(const DRW_Entity& d) {
@@ -261,6 +262,7 @@ public:
 
     void parseCode(int code, dxfReader *reader);
     void toPolyline(DRW_Polyline *pol);
+    void correctAxis();
 public:
     double ratio;           /*!< ratio, code 40 */
     double staparam;        /*!< start parameter, code 41, 0.0 for full ellipse*/
