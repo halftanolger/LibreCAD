@@ -205,7 +205,7 @@ RS_Layer* QG_DialogFactory::requestNewLayerDialog(RS_LayerList* layerList) {
             layer_name = "noname";
         }
         newLayerName = QString(layer_name);
-        while(layerList->find(newLayerName) > 0) {
+        while(layerList->find(newLayerName) != NULL) {
             newLayerName = QString("%1%2").arg(layer_name).arg(i);
         }
     }
@@ -474,7 +474,11 @@ QString QG_DialogFactory::requestFileSaveAsDialog() {
 
     filters.append("Drawing Exchange (*.dxf)");
     filters.append("Font (*.cxf)");
-    fileDlg.setFilters(filters);
+#if QT_VERSION < 0x040400
+    emu_qt44_QFileDialog_setNameFilters(fileDlg, filters);
+#else
+    fileDlg.setNameFilters(filters);
+#endif
     fileDlg.setMode(QFileDialog::AnyFile);
     fileDlg.setCaption(tr("Save Drawing As"));
     fileDlg.setDir(defDir);
@@ -637,7 +641,11 @@ QString QG_DialogFactory::requestImageOpenDialog() {
     if (!cancel) {
         RS_SETTINGS->beginGroup("/Paths");
         RS_SETTINGS->writeEntry("/OpenImage", QFileInfo(fn).absolutePath());
-        RS_SETTINGS->writeEntry("/ImageFilter", fileDlg.selectedFilter());
+#if QT_VERSION < 0x040400
+        RS_SETTINGS->writeEntry("/ImageFilter", emu_qt44_QFileDialog_selectedNameFilter(fileDlg));
+#else
+        RS_SETTINGS->writeEntry("/ImageFilter", fileDlg.selectedNameFilter());
+#endif
         RS_SETTINGS->endGroup();
     }
 

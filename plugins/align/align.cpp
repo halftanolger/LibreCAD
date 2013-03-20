@@ -32,6 +32,7 @@ void LC_Align::execComm(Document_Interface *doc,
                              QWidget *parent, QString cmd)
 {
     Q_UNUSED(parent);
+    Q_UNUSED(cmd);
     QPointF base1, base2, target1, target2;
     QList<Plug_Entity *> obj;
     bool yes  = doc->getSelect(&obj);
@@ -73,4 +74,6 @@ void LC_Align::execComm(Document_Interface *doc,
 }
 
 
+#if QT_VERSION < 0x050000
 Q_EXPORT_PLUGIN2(lc_align, LC_Align);
+#endif
