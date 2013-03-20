@@ -90,6 +90,10 @@ Handle<Value> ScriptDECC::callAsFuncHandler(const Arguments &args)
     Local<FunctionTemplate> tmpAddText = objPtr->makeStaticCallableFunc(addTextHandler);
     instanceTemplate->Set(static_cast<Handle<String> >(String::New("addText")), tmpAddText, ReadOnly);
 
+    //Set addInsert property function
+    Local<FunctionTemplate> tmpAddInsert = objPtr->makeStaticCallableFunc(addInsertHandler);
+    instanceTemplate->Set(static_cast<Handle<String> >(String::New("addInsert")), tmpAddInsert, ReadOnly);
+
     Local<Object> instance = instanceTemplate->NewInstance();
     instance->SetInternalField(0, Integer::New(objPtr->instanceList.size()));
 
@@ -486,7 +490,7 @@ Handle<Value> ScriptDECC::addTextHandler(const Arguments &args)
     if (!args[1]->IsString())
         return v8::ThrowException(v8::String::New("Arg 1 must be a string."));
     for(int i = 2; i < 8; i++)
-        if (!args[i]->IsInt32())
+        if (!args[i]->IsNumber())
             return v8::ThrowException(v8::String::New("Arg 2-7 must be number-objects."));
 
     double  x = args[2]->ToNumber()->Value();
@@ -511,6 +515,68 @@ Handle<Value> ScriptDECC::addTextHandler(const Arguments &args)
 }
 
 
+
+
+/**
+ * @brief ScriptDECC::addInsertHandler
+ *
+ * Precondition
+ *
+ *     args[0] = A string representing the name.
+ *     args[1] = A double representing insert x
+ *     args[2] = A double representing insert y
+ *     args[3] = A double representing scale x
+ *     args[4] = A double representing scale y
+ *     args[5] = A double representing the rotation angle
+ *
+ * Postcondition
+ *
+ *    A dxf file is added to the LibreCAD document.
+ *
+ * Example of usage
+ *
+ *    var l = new CAD();
+ *    l.addInsert('inntak',10,10,1,1,0);
+ *
+ */      
+Handle<Value> ScriptDECC::addInsertHandler(const Arguments &args)
+{
+    HandleScope scope;
+
+    Local<Object> thisObj = args.This();
+    if(thisObj.IsEmpty())
+        return v8::ThrowException(v8::String::New("Error getting hold of 'this'."));
+
+    if(args.Length() != 6)
+    {
+        ostringstream strstream;
+        strstream<<"Got unexpected number of arguments. Expecting 6, got "<<args.Length()<<endl;
+        return v8::ThrowException(v8::String::New(strstream.str().c_str()));
+    }
+
+    if (!args[0]->IsString())
+        return v8::ThrowException(v8::String::New("Arg 0 must be a string."));    
+    for(int i = 1; i < 5; i++)
+        if (!args[i]->IsInt32())
+            return v8::ThrowException(v8::String::New("Arg 1-5 must be number-objects."));
+
+    double  x = args[1]->ToNumber()->Value();
+    double  y = args[2]->ToNumber()->Value();
+    double  scale_x = args[3]->ToNumber()->Value();
+    double  scale_y = args[4]->ToNumber()->Value();
+    double  rot_angle = args[5]->ToNumber()->Value();
+
+    String::Utf8Value valName(Local<String>::Cast(args[0]));
+    QString name(*valName);
+
+    QPointF insert_point(x,y);
+    QPointF scale_vector(scale_x,scale_y);
+
+    ScriptDECC *objPtr = externalToClassPtr<ScriptDECC>(args.Data());
+    objPtr->_cad->addInsert(name, insert_point, scale_vector, rot_angle);
+
+    return v8::Undefined();
+}
 
 
 

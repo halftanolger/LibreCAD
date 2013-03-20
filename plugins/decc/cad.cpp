@@ -103,7 +103,7 @@ void CAD::addInsert(QString name, QPointF ins, QPointF scale, qreal rot)
 
     QStringList blockList = _doc->getAllBlocks();
     if (!blockList.contains(name))
-        _doc->addBlockfromFromdisk("/home/halftan/partlibrary/configurator/" + name + ".dxf");
+        _doc->addBlockfromFromdisk("/home/halftan/library/demas/enlinje/vernsymboler/" + name + ".dxf");
 
     _doc->addInsert(name,ins,scale,rot);
 

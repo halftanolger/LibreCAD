@@ -23,6 +23,8 @@ public:
 
     CAD(Document_Interface *doc);
 
+    void addInsert(QString name, QPointF ins, QPointF scale, qreal rot);
+
     void addLine(double x1, double y1, double x2, double y2);
     void addText(QString text, QString style, QPointF *start, double height, double angle, int ha, int va );
 

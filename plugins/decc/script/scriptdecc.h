@@ -51,6 +51,7 @@ private:
     static Handle<Value>setLayerHandler(const Arguments &args);
     static Handle<Value>addLineHandler(const Arguments &args);
     static Handle<Value>addTextHandler(const Arguments &args);
+    static Handle<Value>addInsertHandler(const Arguments &args);
 
     CAD* _cad;
     string includePath;
