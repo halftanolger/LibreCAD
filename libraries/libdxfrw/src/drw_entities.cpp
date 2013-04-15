@@ -70,9 +70,7 @@ void DRW_Entity::parseCode(int code, dxfReader *reader){
         color = reader->getInt32();
         break;
     case 370:
-//        lWeight = (DRW::LWEIGHT)reader->getInt32();
-//RLZ: TODO as integer or enum??
-        lWeight = reader->getInt32();
+        lWeight = DRW_LW_Conv::dxfInt2lineWidth(reader->getInt32());
         break;
     case 48:
         ltypeScale = reader->getDouble();
@@ -162,10 +160,10 @@ void DRW_Circle::parseCode(int code, dxfReader *reader){
 void DRW_Arc::parseCode(int code, dxfReader *reader){
     switch (code) {
     case 50:
-        staangle = reader->getDouble();
+        staangle = reader->getDouble()/ ARAD;
         break;
     case 51:
-        endangle = reader->getDouble();
+        endangle = reader->getDouble()/ ARAD;
         break;
     default:
         DRW_Circle::parseCode(code, reader);
@@ -387,6 +385,9 @@ void DRW_LWPolyline::parseCode(int code, dxfReader *reader){
     case 38:
         elevation = reader->getDouble();
         break;
+    case 39:
+        thickness = reader->getDouble();
+        break;
     case 43:
         width = reader->getDouble();
         break;
@@ -600,11 +601,11 @@ void DRW_Hatch::parseCode(int code, dxfReader *reader){
         if (plvert) plvert ->bulge = reader->getDouble();
         break;
     case 50:
-        if (arc) arc->staangle = reader->getDouble();
+        if (arc) arc->staangle = reader->getDouble()/ARAD;
         else if (ellipse) ellipse->staparam = reader->getDouble()/ARAD;
         break;
     case 51:
-        if (arc) arc->endangle = reader->getDouble();
+        if (arc) arc->endangle = reader->getDouble()/ARAD;
         else if (ellipse) ellipse->endparam = reader->getDouble()/ARAD;
         break;
     case 52:

@@ -18,9 +18,7 @@
 #include "drw_textcodec.h"
 #include "dxfreader.h"
 #include "dxfwriter.h"
-
-
-using namespace std;
+#include <assert.h>
 
 #ifdef DRW_DBG
 #include <iostream> //for debug
@@ -53,11 +51,14 @@ dxfRW::~dxfRW(){
 }
 
 bool dxfRW::read(DRW_Interface *interface_, bool ext){
+    assert(fileName.empty() == false);
     bool isOk = false;
     applyExt = ext;
-    ifstream filestr;
+    std::ifstream filestr;
+    if ( interface_ == NULL )
+                return isOk;
     DBG("dxfRW::read 1def\n");
-    filestr.open (fileName.c_str(), ios_base::in | ios::binary);
+    filestr.open (fileName.c_str(), std::ios_base::in | std::ios::binary);
     if (!filestr.is_open())
         return isOk;
     if (!filestr.good())
@@ -72,15 +73,15 @@ bool dxfRW::read(DRW_Interface *interface_, bool ext){
     iface = interface_;
     DBG("dxfRW::read 2\n");
     if (strcmp(line, line2) == 0) {
-        filestr.open (fileName.c_str(), ios_base::in | ios::binary);
+        filestr.open (fileName.c_str(), std::ios_base::in | std::ios::binary);
         binary = true;
         //skip sentinel
-        filestr.seekg (22, ios::beg);
+        filestr.seekg (22, std::ios::beg);
         reader = new dxfReaderBinary(&filestr);
         DBG("dxfRW::read binary file\n");
     } else {
         binary = false;
-        filestr.open (fileName.c_str(), ios_base::in);
+        filestr.open (fileName.c_str(), std::ios_base::in);
         reader = new dxfReaderAscii(&filestr);
     }
 
@@ -93,18 +94,18 @@ bool dxfRW::read(DRW_Interface *interface_, bool ext){
 
 bool dxfRW::write(DRW_Interface *interface_, DRW::Version ver, bool bin){
     bool isOk = false;
-    ofstream filestr;
+    std::ofstream filestr;
     version = ver;
     binary = bin;
     iface = interface_;
     if (binary) {
-        filestr.open (fileName.c_str(), ios_base::out | ios::binary | ios::trunc);
+        filestr.open (fileName.c_str(), std::ios_base::out | std::ios::binary | std::ios::trunc);
         //write sentinel
         filestr << "AutoCAD Binary DXF\r\n" << (char)26 << '\0';
         writer = new dxfWriterBinary(&filestr);
         DBG("dxfRW::read binary file\n");
     } else {
-        filestr.open (fileName.c_str(), ios_base::out | ios::trunc);
+        filestr.open (fileName.c_str(), std::ios_base::out | std::ios::trunc);
         writer = new dxfWriterAscii(&filestr);
         std::string comm = std::string("dxfrw ") + std::string(DRW_VERSION);
         writer->writeString(999, comm);
@@ -249,10 +250,9 @@ bool dxfRW::writeLayer(DRW_Layer *ent){
 bool dxfRW::writeTextstyle(DRW_Textstyle *ent){
     writer->writeString(0, "STYLE");
     if (!dimstyleStd) {
-        std::string name;
-        std::stringstream ss;
-        ss << std::uppercase << ent->name;
-        ss >> name;
+        //stringstream cause crash in OS/X, bug#3597944
+        std::string name=ent->name;
+        transform(name.begin(), name.end(), name.begin(), toupper);
         if (name == "STANDARD")
             dimstyleStd = true;
     }
@@ -590,8 +590,8 @@ bool dxfRW::writeArc(DRW_Arc *ent) {
     if (version > DRW::AC1009) {
         writer->writeString(100, "AcDbArc");
     }
-    writer->writeDouble(50, ent->staangle);
-    writer->writeDouble(51, ent->endangle);
+    writer->writeDouble(50, ent->staangle*ARAD);
+    writer->writeDouble(51, ent->endangle*ARAD);
     return true;
 }
 
@@ -697,6 +697,10 @@ bool dxfRW::writeLWPolyline(DRW_LWPolyline *ent){
         writer->writeInt32(90, ent->vertexnum);
         writer->writeInt16(70, ent->flags);
         writer->writeDouble(43, ent->width);
+        if (ent->elevation != 0)
+            writer->writeDouble(38, ent->elevation);
+        if (ent->thickness != 0)
+            writer->writeDouble(39, ent->thickness);
         for (int i = 0;  i< ent->vertexnum; i++){
             DRW_Vertex2D *v = ent->vertlist.at(i);
             writer->writeDouble(10, v->x);
@@ -883,8 +887,8 @@ bool dxfRW::writeHatch(DRW_Hatch *ent){
                         writer->writeDouble(10, a->basePoint.x);
                         writer->writeDouble(20, a->basePoint.y);
                         writer->writeDouble(40, a->radious);
-                        writer->writeDouble(50, a->staangle);
-                        writer->writeDouble(51, a->endangle);
+                        writer->writeDouble(50, a->staangle*ARAD);
+                        writer->writeDouble(51, a->endangle*ARAD);
                         writer->writeInt16(73, a->isccw);
                         break; }
                     case DRW::ELLIPSE: {
@@ -1653,7 +1657,7 @@ bool dxfRW::writeObjects() {
 //write IMAGEDEF_REACTOR
     for (unsigned int i=0; i<imageDef.size(); i++) {
         DRW_ImageDef *id = imageDef.at(i);
-        map<string, string>::iterator it;
+        std::map<string, string>::iterator it;
         for ( it=id->reactors.begin() ; it != id->reactors.end(); it++ ) {
             writer->writeString(0, "IMAGEDEF_REACTOR");
             writer->writeString(5, (*it).first);
@@ -1686,7 +1690,7 @@ bool dxfRW::writeObjects() {
 //            writer->writeString(330, "0"); handle to DICTIONARY
         }
         writer->writeString(102, "{ACAD_REACTORS");
-        map<string, string>::iterator it;
+        std::map<string, string>::iterator it;
         for ( it=id->reactors.begin() ; it != id->reactors.end(); it++ ) {
             writer->writeString(330, (*it).first);
         }
@@ -2651,8 +2655,8 @@ std::string dxfRW::toHexStr(int n){
     sprintf(buffer, "%X", n);
     return std::string(buffer);
 #else
-    ostringstream Convert;
-    Convert << uppercase << hex << n;
+    std::ostringstream Convert;
+    Convert << std::uppercase << std::hex << n;
     return Convert.str();
 #endif
 }
