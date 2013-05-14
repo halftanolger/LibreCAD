@@ -10,12 +10,7 @@
 /*  along with this program.  If not, see <http://www.gnu.org/licenses/>.    */
 /*****************************************************************************/
 /*
- * Here I define my extension to the V8 JavaScript engine. So far I try to
- * support these LibreCAD plugin features:
- *
- * var cad = new CAD();
- *
- * var id = cad.newEntity('LINE');
+ * Here I define my extension to the V8 JavaScript engine.
  *
  */
 

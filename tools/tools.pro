@@ -6,7 +6,8 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS     =
+SUBDIRS     = \
+    j_filterdxfrw
 
 win32 {
 #set this line with your freetype installation to build ttf2lff

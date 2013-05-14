@@ -978,11 +978,12 @@ void J_filterdxfrw::addHatch(const DRW_Hatch *data) {
 
     double cx = 0.0,cy = 0.0,cr = 0.0;
 
+    /*
     env->CallVoidMethod(obj, mid_addhatch, data->solid,data->scale,data->angle,env->NewStringUTF(data->name.c_str()));
     if (env->ExceptionCheck()) {
          qCritical("J_filterdxfrw::addHatch: Exception at env->CallVoidMethod(obj, mid_addhatch, ...);");
         return;
-    }
+    }*/
 
     /*
     RS_DEBUG->print("RS_FilterDXF::addHatch()");

@@ -77,7 +77,7 @@ public:
     void initStatusBar();
 
     void initSettings();
-        void restoreDocks();
+    void restoreDocks();
     void storeSettings();
 
     void updateRecentFilesMenu();
