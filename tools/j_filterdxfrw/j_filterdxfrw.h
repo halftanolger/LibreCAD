@@ -87,6 +87,7 @@ private:
     jmethodID mid_addhatchloop;
     jmethodID mid_addhatchloopcircle;
     jmethodID mid_addhatchdone;
+    jmethodID mid_addtext;
 
 };
 

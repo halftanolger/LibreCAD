@@ -6,13 +6,14 @@
 #include <qtextcodec.h>
 
 #include "j_filterdxfrw.h"
+#include "rs_vector.h"
+#include "rs_text.h"
 
 J_filterdxfrw::J_filterdxfrw():DRW_Interface() {
 }
 
 J_filterdxfrw::~J_filterdxfrw() {    
 }
-
 
 bool J_filterdxfrw::fileImport(JNIEnv *env, jobject obj, const QString& file) {
 
@@ -52,13 +53,12 @@ bool J_filterdxfrw::fileImport(JNIEnv *env, jobject obj, const QString& file) {
         return false;
     }
 
-    mid_addhatch = env->GetMethodID(cls, "callbackAddHatch", "(IDDLjava/lang/String;DDD)V");
+    mid_addhatch = env->GetMethodID(cls, "callbackAddHatch", "(IDDLjava/lang/String;)V");
     if (mid_addhatch == NULL) {
-        qCritical("Couldn't get hold of java callback method callbackAddHatch");
+        qCritical("Couldn't get hold of java callback method callbackAddHatch debug");
         return false;
     }
 
-    /*
     mid_addhatchloop = env->GetMethodID(cls, "callbackAddHatchLoop", "()V");
     if (mid_addhatchloop == NULL) {
         qCritical("Couldn't get hold of java callback method callbackAddHatchLoop");
@@ -76,7 +76,12 @@ bool J_filterdxfrw::fileImport(JNIEnv *env, jobject obj, const QString& file) {
         qCritical("Couldn't get hold of java callback method callbackAddHatchDone");
         return false;
     }
-    */
+
+    mid_addtext = env->GetMethodID(cls, "callbackAddText", "(DDDDDDIIILjava/lang/String;Ljava/lang/String;DI)V");
+    if (mid_addtext == NULL) {
+        qCritical("Couldn't get hold of java callback method callbackAddText");
+        return false;
+    }
 
     dxf = new dxfRW(QFile::encodeName(file));
     bool success = dxf->read(this, true);
@@ -667,8 +672,12 @@ void J_filterdxfrw::addMText(const DRW_MText& data) {
  * texts (TEXT).
  */
 void J_filterdxfrw::addText(const DRW_Text& data) {
-    /*
-    RS_DEBUG->print("J_filterdxfrw::addText");
+
+
+
+
+
+    //RS_DEBUG->print("J_filterdxfrw::addText");
     RS_Vector refPoint = RS_Vector(data.basePoint.x, data.basePoint.y);;
     RS_Vector secPoint = RS_Vector(data.secPoint.x, data.secPoint.y);;
     double angle = data.angle;
@@ -707,19 +716,34 @@ void J_filterdxfrw::addText(const DRW_Text& data) {
         sty = fontList.value(sty, sty);
     }
 
-    RS_DEBUG->print("Text as unicode:");
-    RS_DEBUG->printUnicode(mtext);
+    //RS_DEBUG->print("Text as unicode:");
+    //RS_DEBUG->printUnicode(mtext);
 
-    RS_TextData d(refPoint, secPoint, data.height, data.widthscale,
-                  valign, halign, dir,
-                  mtext, sty, angle*M_PI/180,
-                  RS2::NoUpdate);
-    RS_Text* entity = new RS_Text(currentContainer, d);
+    //RS_TextData d(refPoint, secPoint, data.height, data.widthscale,
+    //              valign, halign, dir,
+    //              mtext, sty, angle*M_PI/180,
+    //              RS2::NoUpdate);
+    //RS_Text* entity = new RS_Text(currentContainer, d);
 
-    setEntityAttributes(entity, &data);
-    entity->update();
-    currentContainer->addEntity(entity);
-    */
+    //setEntityAttributes(entity, &data);
+    //entity->update();
+    //currentContainer->addEntity(entity);
+
+
+
+
+
+    jstring jstrMText = env->NewStringUTF(mtext.toStdString().c_str());
+    jstring jstrStyle = env->NewStringUTF(sty.toStdString().c_str());
+
+    env->CallVoidMethod(obj, mid_addtext,
+                        refPoint.x,refPoint.y,
+                        secPoint.x,secPoint.y,
+                        data.height, data.widthscale,
+                        valign, halign, dir,jstrMText,jstrStyle,angle*M_PI/180,RS2::NoUpdate);
+
+
+
 }
 
 
@@ -978,12 +1002,12 @@ void J_filterdxfrw::addHatch(const DRW_Hatch *data) {
 
     double cx = 0.0,cy = 0.0,cr = 0.0;
 
-    /*
+
     env->CallVoidMethod(obj, mid_addhatch, data->solid,data->scale,data->angle,env->NewStringUTF(data->name.c_str()));
     if (env->ExceptionCheck()) {
          qCritical("J_filterdxfrw::addHatch: Exception at env->CallVoidMethod(obj, mid_addhatch, ...);");
         return;
-    }*/
+    }
 
     /*
     RS_DEBUG->print("RS_FilterDXF::addHatch()");
@@ -1003,12 +1027,12 @@ void J_filterdxfrw::addHatch(const DRW_Hatch *data) {
         //hatchLoop->setLayer(NULL);
         //hatch->addEntity(hatchLoop);
 
-        /*
+
         env->CallVoidMethod(obj, mid_addhatchloop);
         if (env->ExceptionCheck()) {
              qCritical("J_filterdxfrw::addHatch: Exception at env->CallVoidMethod(obj, mid_addhatchloop);");
             return;
-        }*/
+        }
 
 
         //RS_Entity* e = NULL;
@@ -1053,13 +1077,13 @@ void J_filterdxfrw::addHatch(const DRW_Hatch *data) {
                         //                  RS_CircleData(RS_Vector(e2->basePoint.x, e2->basePoint.y),
                         //                                e2->radious));
 
-                        /*
+
                         env->CallVoidMethod(obj, mid_addhatchloopcircle,e2->basePoint.x, e2->basePoint.y,e2->radious);
                         if (env->ExceptionCheck()) {
                              qCritical("J_filterdxfrw::addHatch: Exception at env->CallVoidMethod(obj, mid_addhatchloopcircle,x,y,r);");
                             return;
                         }
-                        */
+
                         cx = e2->basePoint.x;
                         cy = e2->basePoint.y;
                         cr =e2->radious;
@@ -1129,14 +1153,14 @@ void J_filterdxfrw::addHatch(const DRW_Hatch *data) {
 
     }
 
-/*
+
     env->CallVoidMethod(obj, mid_addhatchdone);
     if (env->ExceptionCheck()) {
          qCritical("J_filterdxfrw::addHatch: Exception at env->CallVoidMethod(obj, mid_addhatchdone);");
         return;
     }
 
-*/
+
     /*
     RS_DEBUG->print("hatch->update()");
     if (hatch->validate()) {
@@ -1147,13 +1171,13 @@ void J_filterdxfrw::addHatch(const DRW_Hatch *data) {
                     "J_filterdxfrw::endEntity(): updating hatch failed: invalid hatch area");
     }*/
 
-
+/*
     env->CallVoidMethod(obj, mid_addhatch, data->solid,data->scale,data->angle,env->NewStringUTF(data->name.c_str()),cx,cy,cr);
     if (env->ExceptionCheck()) {
          qCritical("J_filterdxfrw::addHatch: Exception at env->CallVoidMethod(obj, mid_addhatch, ...);");
         return;
     }
-
+*/
 
 
 }
